@@ -1,0 +1,33 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: dw_sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${SQLSERVER_PASSWORD}"
+    ports:
+      - "11433:1433"  # Porta 11433 exposta para acesso externo (SSMS, Power BI, Excel, DBeaver)
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dw_backend
+    ports:
+      - "8000:8000"  # Porta 8000 exposta para a API FastAPI (Swagger, Frontend, Integrações)
+    environment:
+      - SQLSERVER_HOST=${SQLSERVER_HOST}
+      - SQLSERVER_PORT=${SQLSERVER_PORT}
+      - SQLSERVER_DB=${SQLSERVER_DB}
+      - SQLSERVER_USER=${SQLSERVER_USER}
+      - SQLSERVER_PASSWORD=${SQLSERVER_PASSWORD}
+      - SQLSERVER_DRIVER=${SQLSERVER_DRIVER}
+    depends_on:
+      - sqlserver
+    restart: always
+
+volumes:
+  sqlserver_data:

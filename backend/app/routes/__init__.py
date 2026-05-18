@@ -1,0 +1,1 @@
+# Inicializador das rotas

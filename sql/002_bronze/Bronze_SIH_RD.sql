@@ -1,0 +1,59 @@
+CREATE TABLE bronze.sih_rd (
+
+     -- Geografia
+    UF_ZI VARCHAR(10),
+    MUNIC_RES VARCHAR(10),
+    MUNIC_MOV VARCHAR(10),
+    CEP VARCHAR(10),
+
+    -- Competência
+    ANO_CMPT SMALLINT,
+    MES_CMPT TINYINT,
+
+    -- Datas
+    DT_INTER VARCHAR(8),
+    DT_SAIDA VARCHAR(8),
+
+    -- Internação
+    N_AIH VARCHAR(20),
+    IDENT VARCHAR(10),
+    ESPEC VARCHAR(10),
+    CAR_INT VARCHAR(10),
+    COMPLEX VARCHAR(10),
+    CNES VARCHAR(10),
+
+    -- Demografia
+    SEXO CHAR(1),
+    COD_IDADE VARCHAR(5),
+    IDADE SMALLINT,
+    RACA_COR VARCHAR(5),
+    ETNIA VARCHAR(10),
+    INSTRU VARCHAR(10),
+    NUM_FILHOS SMALLINT,
+
+    -- Diagnósticos
+    DIAG_PRINC VARCHAR(10),
+    DIAG_SECUN VARCHAR(10),
+    CID_ASSO VARCHAR(10),
+    CID_MORTE VARCHAR(10),
+
+    -- Custos
+    VAL_SH DECIMAL(14,2),
+    VAL_SP DECIMAL(14,2),
+    VAL_TOT DECIMAL(14,2),
+    VAL_UTI DECIMAL(14,2),
+
+    -- Permanência
+    DIAS_PERM SMALLINT,
+    QT_DIARIAS SMALLINT,
+
+    -- Desfecho
+    MORTE BIT,
+
+    -- Gestão
+    GESTAO VARCHAR(10),
+    GESTOR_COD VARCHAR(20),
+
+    -- Controle
+    data_ingestao DATETIME DEFAULT GETDATE()
+);
