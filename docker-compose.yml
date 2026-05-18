@@ -29,5 +29,18 @@ services:
       - sqlserver
     restart: always
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: dw_frontend
+    ports:
+      - "3000:3000"  # Porta 3000 exposta para o Next.js (Dashboard e Chat IA)
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8000"  # URL pública da API do backend
+    depends_on:
+      - backend
+    restart: always
+
 volumes:
   sqlserver_data:

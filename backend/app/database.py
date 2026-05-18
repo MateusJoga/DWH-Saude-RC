@@ -45,3 +45,43 @@ def get_db():
         yield db
     finally:
         db.close()
+
+# -------------------------------------------------------------------------
+# POOL DE CONEXÕES EXCLUSIVO E RESTRITO PARA O ASSISTENTE DE IA
+# -------------------------------------------------------------------------
+ia_engine = None
+IaSessionLocal = None
+
+if settings.sqlserver_ia_user and settings.sqlserver_ia_password:
+    try:
+        encoded_ia_password = urllib.parse.quote_plus(settings.sqlserver_ia_password)
+        IA_DATABASE_URL = (
+            f"mssql+pyodbc://{settings.sqlserver_ia_user}:{encoded_ia_password}@"
+            f"{settings.sqlserver_host}:{settings.sqlserver_port}/{settings.sqlserver_db}"
+            f"?driver={driver_escaped}&TrustServerCertificate=yes"
+        )
+        logger.info(f"Inicializando pool de IA restrito com usuário: {settings.sqlserver_ia_user}")
+        ia_engine = create_engine(
+            IA_DATABASE_URL,
+            pool_pre_ping=True,
+            pool_recycle=1800
+        )
+        IaSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ia_engine)
+    except Exception as e:
+        logger.error(f"Falha ao carregar pool restrito de IA ({e}). Usando pool master como fallback.")
+        IaSessionLocal = SessionLocal
+else:
+    logger.info("Nenhuma credencial restrita de IA cadastrada no .env. Usando pool master.")
+    IaSessionLocal = SessionLocal
+
+def get_ia_db():
+    """
+    Dependency Generator para a Rota de IA. Fornece conexões restritas
+    com o usuário 'dw_ia_user' para garantir segurança de sandbox em nível SQL.
+    """
+    db = IaSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+

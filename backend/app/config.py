@@ -18,6 +18,16 @@ class Settings(BaseSettings):
     sqlserver_user: str = "sa"
     sqlserver_password: str = "SenhaForte123!"
     sqlserver_driver: str = "ODBC Driver 18 for SQL Server"
+    
+    # Credenciais restritas para conexão do Assistente de IA
+    sqlserver_ia_user: str | None = None
+    sqlserver_ia_password: str | None = None
+    
+    # Variáveis de IA e Modelos LLM
+    llm_provider: str = "none"
+    gemini_api_key: str | None = None
+    openai_api_key: str | None = None
+    llm_model: str | None = None
 
     model_config = SettingsConfigDict(
         # Aponta para o arquivo .env se ele existir na raiz, senão busca no diretório de execução
