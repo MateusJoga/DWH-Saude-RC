@@ -40,8 +40,6 @@ CREATE TABLE prata.sih_procedimentos (
 
     tipo_financiamento VARCHAR(80),
 
-    codigo_faec VARCHAR(10),
-
     possui_faec BIT,
 
     -- Profissional

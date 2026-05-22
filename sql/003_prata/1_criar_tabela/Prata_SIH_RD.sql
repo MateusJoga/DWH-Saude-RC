@@ -27,30 +27,27 @@ CREATE TABLE prata.sih_internacoes (
     cnes CHAR(7),
 
     -- Internação
-    tipo_identificacao VARCHAR(10),
-    especialidade VARCHAR(10),
-    carater_internacao VARCHAR(10),
-    complexidade VARCHAR(10),
+    tipo_identificacao VARCHAR(30),
+    especialidade VARCHAR(100),
+    carater_internacao VARCHAR(100),
+    complexidade VARCHAR(50),
 
     -- Demografia
-    sexo CHAR(1),
+    sexo CHAR(20),
 
     codigo_tipo_idade VARCHAR(5),
     idade SMALLINT,
 
     faixa_etaria VARCHAR(30),
 
-    raca_cor VARCHAR(5),
+    raca_cor VARCHAR(20),
 
-    escolaridade VARCHAR(10),
+    escolaridade VARCHAR(30),
 
     quantidade_filhos SMALLINT,
 
     -- Diagnósticos
     cid_principal VARCHAR(10),
-    cid_secundario VARCHAR(10),
-    cid_associado VARCHAR(10),
-    cid_obito VARCHAR(10),
 
     -- Financeiro
     valor_servicos_hospitalares DECIMAL(14,2),
@@ -68,7 +65,7 @@ CREATE TABLE prata.sih_internacoes (
     obito BIT,
 
     -- Gestão
-    tipo_gestao VARCHAR(10),
+    tipo_gestao VARCHAR(100),
     codigo_gestor VARCHAR(20),
 
     -- Temporalidade DW

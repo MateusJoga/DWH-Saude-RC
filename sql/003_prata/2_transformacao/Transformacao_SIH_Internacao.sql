@@ -146,9 +146,6 @@ SELECT
     ISNULL(NUM_FILHOS, 0) AS quantidade_filhos,
 
     NULLIF(DIAG_PRINC, '0000') AS cid_principal,
-    NULL AS cid_secundario,
-    NULL AS cid_associado,
-    NULL AS cid_obito,
 
     ISNULL(VAL_SH, 0) AS valor_servicos_hospitalares,
     ISNULL(VAL_SP, 0) AS valor_servicos_profissionais,

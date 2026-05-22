@@ -16,7 +16,6 @@ INSERT INTO prata.sih_procedimentos (
     valor_procedimento,
     pontos_sus,
     tipo_financiamento,
-    codigo_faec,
     possui_faec,
     cbo_profissional,
     cid_principal,
@@ -57,8 +56,6 @@ SELECT
         WHEN '07' THEN 'Vigilância em Saúde'
         ELSE 'Não identificado'
     END,
-
-    NULLIF(SP_CO_FAEC, ''),
 
     CASE
         WHEN NULLIF(SP_CO_FAEC, '') IS NOT NULL THEN 1
