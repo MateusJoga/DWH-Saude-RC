@@ -7,8 +7,14 @@ app = FastAPI(
     title="Data Warehouse Saúde Pública - API Backend",
     description=(
         "API de Integração desenvolvida com FastAPI para conectar ao banco SQL Server (Docker).\n\n"
-        "Esta API atende aos dashboards analíticos, expõe as agregações mensais de hospitais e CIDs "
-        "da camada **ouro** e está preparada com endpoints para integração com modelos de Inteligência Artificial (LLMs)."
+        "Esta API atende aos dashboards analíticos, expõe dados granulares e agregações da camada **ouro** "
+        "do Data Warehouse e está preparada com endpoints para integração com modelos de Inteligência Artificial (LLMs).\n\n"
+        "**Endpoints principais:**\n"
+        "- GET /consultas/internacoes - Fatos granulares de internações com filtros por período\n"
+        "- GET /consultas/procedimentos - Fatos granulares de procedimentos com filtros por período\n"
+        "- GET /consultas/hospitais - Agregações mensais por hospital\n"
+        "- GET /consultas/cids - Agregações mensais por patologia (CID)\n"
+        "- GET /health - Status da API e conexão com banco"
     ),
     version="1.0.0",
     docs_url="/docs",
