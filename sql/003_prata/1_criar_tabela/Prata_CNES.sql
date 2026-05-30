@@ -4,7 +4,7 @@ CREATE TABLE prata.cnes (
     id_cnes INT IDENTITY(1,1) PRIMARY KEY,
 
     -- Identificador negócio
-    cnes CHAR(7) UNIQUE NOT NULL,
+    cnes CHAR(7) NOT NULL,,
 
     -- Localização
     codigo_municipio CHAR(6) NOT NULL,
@@ -53,5 +53,8 @@ CREATE TABLE prata.cnes (
 
     -- Auditoria
     data_ingestao DATETIME2 DEFAULT GETDATE()
+
+    CONSTRAINT uq_cnes_competencia
+    UNIQUE (cnes, competencia)
 
 );

@@ -22,9 +22,6 @@ INSERT INTO prata.sih_internacoes (
     escolaridade,
     quantidade_filhos,
     cid_principal,
-    cid_secundario,
-    cid_associado,
-    cid_obito,
     valor_servicos_hospitalares,
     valor_servicos_profissionais,
     valor_total_internacao,
@@ -179,4 +176,16 @@ WHERE NOT EXISTS (
     SELECT 1
     FROM prata.sih_internacoes p
     WHERE p.numero_aih = b.N_AIH
+      AND p.competencia = CONCAT(
+            b.ANO_CMPT,
+            RIGHT('00' + CAST(b.MES_CMPT AS VARCHAR), 2)
+      )
+      AND p.data_internacao = CONVERT(DATE, b.DT_INTER, 112)
+      AND p.data_saida = CONVERT(DATE, b.DT_SAIDA, 112)
+      AND p.tipo_identificacao =
+          CASE b.IDENT
+              WHEN '1' THEN 'AIH Normal'
+              WHEN '5' THEN 'AIH Longa Permanência'
+              ELSE 'Não identificado'
+          END
 );

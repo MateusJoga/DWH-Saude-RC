@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_procedimento AS
+CREATE OR ALTER VIEW ouro.dim_procedimento AS
 
 SELECT DISTINCT
     codigo_procedimento,

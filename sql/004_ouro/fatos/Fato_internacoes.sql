@@ -1,99 +1,80 @@
-CREATE VIEW ouro.fato_internacoes AS
+CREATE OR ALTER VIEW ouro.fato_internacoes AS
+
+WITH dim_hospital_unica AS (
+    SELECT *
+    FROM (
+        SELECT
+            h.*,
+            ROW_NUMBER() OVER (
+                PARTITION BY h.cnes, h.competencia
+                ORDER BY h.id_hospital
+            ) AS rn
+        FROM ouro.dim_hospital h
+    ) x
+    WHERE rn = 1
+),
+
+dim_cid_unica AS (
+    SELECT
+        codigo_cid,
+        MAX(grupo_cid) AS grupo_cid,
+        MAX(capitulo_cid) AS capitulo_cid
+    FROM ouro.dim_cid
+    GROUP BY codigo_cid
+)
 
 SELECT
-
-    -- Identificação
     i.id_internacao,
     i.numero_aih,
 
-    -- Tempo
-    t.data AS data_referencia,
-    t.ano,
-    t.mes,
-    t.nome_mes,
-    t.trimestre,
-    t.semestre,
+    i.data_referencia,
+    YEAR(i.data_referencia) AS ano,
+    MONTH(i.data_referencia) AS mes,
+    DATENAME(MONTH, i.data_referencia) AS nome_mes,
+    DATEPART(QUARTER, i.data_referencia) AS trimestre,
+    CASE WHEN MONTH(i.data_referencia) <= 6 THEN 1 ELSE 2 END AS semestre,
 
-    -- Hospital
     h.id_hospital,
-    h.cnes,
+    i.cnes,
     h.nome_municipio AS municipio_hospital,
     h.uf AS uf_hospital,
 
-    -- Municípios
-    mr.nome_municipio AS municipio_residencia,
-    mi.nome_municipio AS municipio_internacao,
+    i.codigo_municipio_residencia,
+    i.codigo_municipio_internacao,
 
-    -- Perfil paciente
-    p.sexo,
-    p.faixa_etaria,
-    p.raca_cor,
-    p.escolaridade,
+    i.sexo,
+    i.faixa_etaria,
+    i.raca_cor,
+    i.escolaridade,
 
-    -- Tipo internação
-    ti.tipo_identificacao,
-    ti.especialidade,
-    ti.carater_internacao,
-    ti.complexidade,
-    ti.tipo_gestao,
+    i.tipo_identificacao,
+    i.especialidade,
+    i.carater_internacao,
+    i.complexidade,
+    i.tipo_gestao,
 
-    -- CID
-    c.codigo_cid,
+    i.cid_principal AS codigo_cid,
     c.grupo_cid,
     c.capitulo_cid,
 
-    -- Métricas financeiras
     i.valor_servicos_hospitalares,
     i.valor_servicos_profissionais,
     i.valor_total_internacao,
     i.valor_uti,
 
-    -- Permanência
     i.dias_permanencia,
     i.quantidade_diarias,
 
-    -- Indicadores
     i.obito,
     i.internacao_longa_permanencia,
 
-    -- Métrica base
     1 AS quantidade_internacoes
 
 FROM prata.sih_internacoes i
 
--- Tempo
-LEFT JOIN ouro.dim_tempo t
-    ON i.data_referencia = t.data
-
--- Hospital
-LEFT JOIN ouro.dim_hospital h
+LEFT JOIN dim_hospital_unica h
     ON i.cnes = h.cnes
-    AND i.competencia = h.competencia
+   AND i.competencia = h.competencia
 
--- Município residência
-LEFT JOIN ouro.dim_municipio mr
-    ON i.codigo_municipio_residencia = mr.codigo_municipio
-
--- Município internação
-LEFT JOIN ouro.dim_municipio mi
-    ON i.codigo_municipio_internacao = mi.codigo_municipio
-
--- Perfil paciente
-LEFT JOIN ouro.dim_paciente_perfil p
-    ON i.sexo = p.sexo
-    AND i.codigo_tipo_idade = p.codigo_tipo_idade
-    AND i.faixa_etaria = p.faixa_etaria
-    AND i.raca_cor = p.raca_cor
-    AND i.escolaridade = p.escolaridade
-
--- Tipo internação
-LEFT JOIN ouro.dim_internacao_tipo ti
-    ON i.tipo_identificacao = ti.tipo_identificacao
-    AND i.especialidade = ti.especialidade
-    AND i.carater_internacao = ti.carater_internacao
-    AND i.complexidade = ti.complexidade
-    AND i.tipo_gestao = ti.tipo_gestao
-
--- CID
-LEFT JOIN ouro.dim_cid c
+LEFT JOIN dim_cid_unica c
     ON i.cid_principal = c.codigo_cid;

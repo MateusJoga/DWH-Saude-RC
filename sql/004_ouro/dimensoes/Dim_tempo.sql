@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_tempo AS
+CREATE OR ALTER VIEW ouro.dim_tempo AS
 
 SELECT DISTINCT
     data_base AS data,

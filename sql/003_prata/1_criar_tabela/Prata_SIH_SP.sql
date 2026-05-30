@@ -61,4 +61,15 @@ CREATE TABLE prata.sih_procedimentos (
     -- Auditoria
     data_ingestao DATETIME2 DEFAULT GETDATE()
 
+    CONSTRAINT uq_sih_procedimentos_evento
+    UNIQUE (
+        numero_aih,
+        competencia,
+        data_internacao,
+        data_saida,
+        codigo_procedimento,
+        codigo_ato_profissional,
+        cbo_profissional
+    )
+
 );

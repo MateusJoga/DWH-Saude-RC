@@ -13,6 +13,7 @@ from pysus.online_data.CNES import CNES
 # IMPORTAÇÃO DAS ETAPAS DO PIPELINE
 from transformer import ajustar_mes_base, RAW_ADJUSTED_DIR
 from loader import carregar_parquet_no_banco
+from dw_processor import executar_processamento_dw
 
 # Configuração Global de Logging unificada
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -132,6 +133,11 @@ def main():
         help="Fonte de dados (opcional, padrão: todas)"
     )
     parser.add_argument("--force", action="store_true", help="Força a recarga e substituição dos dados na Bronze (opcional)")
+    parser.add_argument(
+        "--skip-dw-process",
+        action="store_true",
+        help="Carrega somente a Bronze e não executa o processamento das procedures do DW (opcional)"
+    )
     # NOTA / DOCUMENTAÇÃO FUTURA:
     # --force-download: futura flag para forçar o re-download físico mesmo que o bruto com marcador success já exista.
     
@@ -170,6 +176,7 @@ def main():
     logger.info(f"-> Mês(es) Selecionado(s): {args.mes if args.mes else 'Todos os meses disponíveis'}")
     logger.info(f"-> Fonte(s) Selecionada(s): {args.fonte} (processando: {', '.join(fontes)})")
     logger.info(f"-> Modo Force Ativo? {'SIM (Recarga completa da bronze e regeração do parquet)' if force else 'NÃO (Carga incremental controlada)'}")
+    logger.info(f"-> Processar DW ao final? {'NÃO (Skip ativo)' if args.skip_dw_process else 'SIM (Automaticamente)'}")
     logger.info("=================================================================")
 
     if not meses:
@@ -224,6 +231,14 @@ def main():
             if parar:
                 logger.info("Fim dos dados publicados no DATASUS. Finalizando.")
             break
+
+    # Chamada da procedure de processamento do DW se todas as etapas Bronze selecionadas foram concluídas com sucesso
+    if sucesso_total and not args.skip_dw_process:
+        logger.info("\n==================== PROCESSAMENTO DO DATA WAREHOUSE ====================")
+        sucesso_dw = executar_processamento_dw()
+        if not sucesso_dw:
+            logger.error("Erro crítico no processamento das camadas Prata/Ouro do DW. Abortando pipeline.")
+            sucesso_total = False
 
     # Relatório de execução final
     tempo_total_fim = time.time() - tempo_total_inicio

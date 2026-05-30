@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_profissional AS
+CREATE OR ALTER VIEW ouro.dim_profissional AS
 
 SELECT DISTINCT
 

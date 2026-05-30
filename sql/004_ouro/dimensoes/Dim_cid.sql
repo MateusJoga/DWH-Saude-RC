@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_cid AS
+CREATE OR ALTER VIEW ouro.dim_cid AS
 
 SELECT DISTINCT
 

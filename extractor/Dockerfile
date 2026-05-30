@@ -26,6 +26,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia os scripts necessários (com os novos nomes padronizados) para dentro do container
 COPY transformer.py .
 COPY loader.py .
+COPY dw_processor.py .
 COPY orchestrator.py .
 
 # Garante que as pastas de dados existam como volumes ou diretórios locais se necessário
