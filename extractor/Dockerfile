@@ -32,4 +32,4 @@ COPY orchestrator.py .
 RUN mkdir -p data/raw data/raw_ajusted
 
 # O ponto de entrada agora é o orquestrador do pipeline
-CMD ["python", "-u", "orchestrator.py"]
+ENTRYPOINT ["python", "-u", "orchestrator.py"]

@@ -2,6 +2,7 @@ import os
 import time
 import shutil
 import logging
+import argparse
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -119,20 +120,74 @@ def processar_mes_especifico(nome_base: str, configuracao: dict, ano_atual: int,
 
 def main():
     tempo_total_inicio = time.time()
-    logger.info("=== Iniciando Orquestrador DATASUS Completo (ETL) ===")
-    linha_do_tempo = gerar_linha_do_tempo_esperada(2025)
-    instancias = {"cnes": None, "sih_rd": None, "sih_sp": None}
     
-    ordem_bases = ["cnes", "sih_rd", "sih_sp"]
+    parser = argparse.ArgumentParser(description="Orquestrador DATASUS ETL (Sob Demanda)")
+    parser.add_argument("--ano", type=int, required=True, help="Ano de processamento (obrigatório)")
+    parser.add_argument("--mes", type=int, choices=range(1, 13), help="Mês de processamento (opcional)")
+    parser.add_argument(
+        "--fonte", 
+        type=str, 
+        choices=["cnes", "sih_rd", "sih_sp", "todas"], 
+        default="todas", 
+        help="Fonte de dados (opcional, padrão: todas)"
+    )
+    parser.add_argument("--force", action="store_true", help="Força a recarga e substituição dos dados na Bronze (opcional)")
+    # NOTA / DOCUMENTAÇÃO FUTURA:
+    # --force-download: futura flag para forçar o re-download físico mesmo que o bruto com marcador success já exista.
+    
+    args = parser.parse_args()
 
-    for ano, mes in linha_do_tempo:
+    ano = args.ano
+    force = args.force
+
+    # 1. Determinação dos meses
+    data_atual = datetime.now()
+    if args.mes:
+        meses = [args.mes]
+    else:
+        # Se passar apenas --ano
+        if ano < data_atual.year:
+            # Anos passados: todos os 12 meses
+            meses = list(range(1, 13))
+        elif ano == data_atual.year:
+            # Ano atual: meses do 1 até o mês atual
+            meses = list(range(1, data_atual.month + 1))
+        else:
+            # Anos futuros: não há dados no DATASUS
+            logger.warning(f"Ano {ano} é posterior ao ano corrente. Nenhum mês disponível para processamento.")
+            meses = []
+
+    # 2. Determinação das fontes (Ordem obrigatória: cnes, sih_rd, sih_sp)
+    if args.fonte == "todas":
+        fontes = ["cnes", "sih_rd", "sih_sp"]
+    else:
+        fontes = [args.fonte]
+
+    # Logs Iniciais Aprimorados
+    logger.info("=================================================================")
+    logger.info("=== INICIANDO EXTRATOR DATASUS ETL (SOB DEMANDA) ===")
+    logger.info(f"-> Ano Selecionado: {ano}")
+    logger.info(f"-> Mês(es) Selecionado(s): {args.mes if args.mes else 'Todos os meses disponíveis'}")
+    logger.info(f"-> Fonte(s) Selecionada(s): {args.fonte} (processando: {', '.join(fontes)})")
+    logger.info(f"-> Modo Force Ativo? {'SIM (Recarga completa da bronze e regeração do parquet)' if force else 'NÃO (Carga incremental controlada)'}")
+    logger.info("=================================================================")
+
+    if not meses:
+        logger.warning("Nenhum período disponível para processamento. Finalizando.")
+        return
+
+    instancias = {"cnes": None, "sih_rd": None, "sih_sp": None}
+    sucesso_total = True
+
+    for mes in meses:
         logger.info(f"\n==================== PERÍODO: {ano}-{mes:02d} ====================")
         parar = False
 
-        for nome_base in ordem_bases:
+        for nome_base in fontes:
             config = CONFIGURACAO_BASES[nome_base]
             
             # ETAPA 1: DOWNLOAD
+            # Nota: force-download não está implementada por decisão do usuário, mantendo skip do download se existir .success
             sucesso, Black_instancia, deve_parar = processar_mes_especifico(
                 nome_base, config, ano, mes, instancias[nome_base]
             )
@@ -144,30 +199,42 @@ def main():
 
             if not sucesso:
                 logger.error(f"Erro crítico no download de {nome_base} em {ano}-{mes:02d}. Abortando pipeline.")
-                return
+                sucesso_total = False
+                break
 
             # ETAPA 2: AJUSTE (FILTROS)
             logger.info(f"[{nome_base.upper()}] Disparando ajuste imediato para {ano}-{mes:02d}...")
-            sucesso_ajuste = ajustar_mes_base(nome_base, ano, mes)
+            sucesso_ajuste = ajustar_mes_base(nome_base, ano, mes, force=force)
             
             if not sucesso_ajuste:
                 logger.error(f"Erro crítico no ajuste imediato de {nome_base} em {ano}-{mes:02d}. Abortando pipeline.")
-                return
+                sucesso_total = False
+                break
 
             # ETAPA 3: CARGA NO BANCO DE DADOS
             caminho_parquet = RAW_ADJUSTED_DIR / f"{nome_base}_{ano}" / f"{mes:02d}" / f"{config['arquivo_prefixo']}{str(ano)[2:]}{mes:02d}.parquet"
-            sucesso_carga = carregar_parquet_no_banco(nome_base, ano, mes, caminho_parquet)
+            sucesso_carga = carregar_parquet_no_banco(nome_base, ano, mes, caminho_parquet, force=force)
 
             if not sucesso_carga:
                 logger.error(f"Erro crítico na carga de {nome_base} em {ano}-{mes:02d}. Abortando pipeline.")
-                return
+                sucesso_total = False
+                break
 
-        if parar:
-            logger.info("Fim dos dados publicados no DATASUS. Finalizando.")
+        if not sucesso_total or parar:
+            if parar:
+                logger.info("Fim dos dados publicados no DATASUS. Finalizando.")
             break
 
+    # Relatório de execução final
     tempo_total_fim = time.time() - tempo_total_inicio
-    logger.info(f"\n=== Orquestração Finalizada com Sucesso em {tempo_total_fim:.2f} segundos! ===")
+    logger.info("=================================================================")
+    logger.info("=== FIM DA EXECUÇÃO DO ETL DATASUS ===")
+    if sucesso_total:
+        logger.info(f"Status Final: SUCESSO")
+    else:
+        logger.info(f"Status Final: ERRO (Verifique as falhas acima nos logs)")
+    logger.info(f"Tempo Total: {tempo_total_fim:.2f} segundos")
+    logger.info("=================================================================")
 
 if __name__ == "__main__":
     main()

@@ -50,7 +50,7 @@ BASES_CONFIG = {
     }
 }
 
-def ajustar_mes_base(base: str, ano: int, mes: int) -> bool:
+def ajustar_mes_base(base: str, ano: int, mes: int, force: bool = False) -> bool:
     """Ajusta uma base específica para um ano e mês determinados."""
     config = BASES_CONFIG[base]
     prefixo_pasta = "dados_cnes" if base == "cnes" else f"dados_{base}"
@@ -58,7 +58,7 @@ def ajustar_mes_base(base: str, ano: int, mes: int) -> bool:
     dir_origem = config["pasta_raw"] / f"{prefixo_pasta}_{ano}" / f"{mes:02d}"
     arquivo_saida = RAW_ADJUSTED_DIR / f"{base}_{ano}" / f"{mes:02d}" / f"{config['arquivo_prefixo']}{str(ano)[2:]}{mes:02d}.parquet"
 
-    if arquivo_saida.exists():
+    if arquivo_saida.exists() and not force:
         logging.info(f"[{base.upper()}] Resultado filtrado para {ano}-{mes:02d} já existe. Pulando ajuste.")
         return True
 

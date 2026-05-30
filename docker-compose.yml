@@ -59,19 +59,15 @@ services:
     build:
       context: ./extractor
       dockerfile: Dockerfile
-    container_name: dw_extractor
     volumes:
       - ./data:/app/data
-    environment:
-      - SQLSERVER_HOST=sqlserver          # 👈 Apelido interno do container do banco
-      - SQLSERVER_PORT=1433               # 👈 Porta interna da rede Docker
-      - SQLSERVER_DB=${SQLSERVER_DB}
-      - SQLSERVER_USER=${SQLSERVER_USER}
-      - SQLSERVER_PASSWORD=${SQLSERVER_PASSWORD}
+    env_file:
+      - .env
     depends_on:
       sqlserver:
         condition: service_healthy
-    restart: "no"
+    profiles:
+      - tools
     networks:
       - dw_net
 
