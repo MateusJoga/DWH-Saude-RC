@@ -27,7 +27,10 @@ class Settings(BaseSettings):
     llm_provider: str = "none"
     gemini_api_key: str | None = None
     openai_api_key: str | None = None
+    groq_api_key: str | None = None
     llm_model: str | None = None
+    llm_timeout_seconds: int = 30
+    llm_retry_delay_seconds: float = 2.0
 
     model_config = SettingsConfigDict(
         # Aponta para o arquivo .env se ele existir na raiz, senão busca no diretório de execução

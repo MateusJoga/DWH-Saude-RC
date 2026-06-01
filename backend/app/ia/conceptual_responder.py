@@ -109,6 +109,23 @@ def get_conceptual_response(pergunta: str) -> str:
     """
     pergunta_clean = pergunta.upper()
     pergunta_clean = remover_acentos(pergunta_clean)
+
+    logger.info("Fluxo Conceitual: tentando dicionario local antes da LLM.")
+
+    match = re.search(r"\bCID\s+([A-Z])\b", pergunta_clean)
+    if not match:
+        match = re.search(r"\bGRUPO\s+([A-Z])\b", pergunta_clean)
+
+    if match:
+        letra = match.group(1)
+        if letra in CID_LETTERS_MAP:
+            logger.info("Conceito mapeado localmente: Grupo CID %s", letra)
+            return f"O grupo CID {letra} representa: {CID_LETTERS_MAP[letra]}."
+
+    for termo, explicacao in CONCEPTUAL_TERMS.items():
+        if termo in pergunta_clean:
+            logger.info("Conceito mapeado localmente: %r", termo)
+            return explicacao
     
     # -------------------------------------------------------------------------
     # TENTATIVA 1: Utilizar LLM Real se habilitado (Gemini / OpenAI)

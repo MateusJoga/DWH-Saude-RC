@@ -16,6 +16,9 @@ class PerguntaResponse(BaseModel):
     tipo_pergunta: str
     intencao_detectada: str
     sql_executado: Optional[str] = None
+    sql_gerado: Optional[str] = None
+    query_plan: Optional[Dict[str, Any]] = None
+    dashboard_recomendado: Optional[Dict[str, Any]] = None
     dados: List[Dict[str, Any]]
     resposta: str
     insights: List[str]
