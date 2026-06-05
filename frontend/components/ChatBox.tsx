@@ -56,14 +56,19 @@ export default function ChatBox() {
 
     try {
       const response = await postIaPergunta(texto);
+      const tipoPergunta =
+        response.status === "blocked" || response.status === "blocked_by_safety"
+          ? "blocked_by_safety"
+          : response.status === "success"
+            ? "analytical"
+            : "unknown";
+
       const novaMensagemIa: Message = {
         role: "assistant",
         text: response.resposta,
-        tipo_pergunta: response.tipo_pergunta,
-        sql_executado: response.sql_executado,
-        insights: response.insights,
+        tipo_pergunta: tipoPergunta,
+        sql_executado: response.sql,
         status: response.status,
-        intencao_detectada: response.intencao_detectada,
         dados: response.dados,
       };
       setMessages((prev) => [...prev, novaMensagemIa]);
@@ -197,15 +202,15 @@ export default function ChatBox() {
                     <table className="w-full text-left text-[11px] border-collapse font-sans">
                       <thead className="bg-[#121A2B] text-gray-400 uppercase text-[9px] tracking-wider border-b border-gray-800">
                         <tr>
-                          {Object.keys(msg.dados[0]).map((col) => (
+                          {Object.keys(msg.dados![0]).map((col) => (
                             <th key={col} className="px-3 py-2 text-gray-400 font-semibold">{col}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-850/60 text-gray-300 font-mono">
-                        {msg.dados.map((row, rIdx) => (
+                        {msg.dados!.map((row, rIdx) => (
                           <tr key={rIdx} className="hover:bg-teal-500/[0.02] transition-colors">
-                            {Object.keys(msg.dados[0]).map((col) => {
+                            {Object.keys(msg.dados![0]).map((col) => {
                               const val = row[col];
                               let displayVal = "N/D";
                               if (val !== null && val !== undefined) {

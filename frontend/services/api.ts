@@ -60,13 +60,12 @@ export interface IaPerguntaRequest {
 
 export interface IaPerguntaResponse {
   pergunta: string;
-  tipo_pergunta: string;
+  sql: string | null;
+  dados: Record<string, unknown>[];
   resposta: string;
-  sql_executado: string | null;
-  intencao_detectada: string;
   status: string;
-  insights: string[];
-  dados: Record<string, any>[];
+  tabelas: string[];
+  engine: string;
 }
 
 // -------------------------------------------------------------------------
@@ -160,7 +159,7 @@ export async function getCids(filters: CidFilters = {}): Promise<CidAggregation[
  * Envia uma pergunta em linguagem natural para o endpoint do Assistente de IA.
  */
 export async function postIaPergunta(pergunta: string): Promise<IaPerguntaResponse> {
-  const url = `${API_BASE_URL}/ia/pergunta`;
+  const url = `${API_BASE_URL}/ia/pergunta-llama`;
   const res = await fetch(url, {
     method: "POST",
     headers: {
