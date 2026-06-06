@@ -18,15 +18,6 @@ interface KPICardsProps {
 
 export default function KPICards({ hospitalData, loading }: KPICardsProps) {
   
-  // =========================================================================
-  // CÁLCULO DE MÉTRICAS CLIENT-SIDE (TEMPORÁRIO)
-  // EVOLUÇÃO FUTURA:
-  // Estes cálculos refletem apenas os dados carregados na página atual (paginados).
-  // Em uma etapa futura, criaremos o endpoint GET /consultas/resumo-geral
-  // no FastAPI, o qual executará SELECT SUM(), AVG() etc. globais no banco,
-  // trazendo os dados acumulados totais do Data Warehouse independente de paginação.
-  // =========================================================================
-
   const totalInternacoes = hospitalData.reduce((acc, curr) => acc + curr.quantidade_internacoes, 0);
   
   // Lista CNES distintos
@@ -60,7 +51,7 @@ export default function KPICards({ hospitalData, loading }: KPICardsProps) {
       <div className="flex items-start gap-2.5 rounded-lg border border-teal-800/30 bg-teal-950/10 p-3 text-xs text-teal-400">
         <Info className="h-4.5 w-4.5 shrink-0 text-teal-400" />
         <div>
-          <span className="font-semibold">Nota Arquitetural:</span> As métricas abaixo são agregadas em tempo real com base nos dados exibidos na página atual (até 100 registros por query). No roadmap evolutivo do projeto, integraremos a API com a rota global <code className="bg-teal-900/40 px-1 py-0.5 rounded font-mono text-[10px] text-teal-300">GET /consultas/resumo-geral</code> para fornecer estatísticas gerais consolidadas diretamente da camada ouro.
+          <span className="font-semibold">Nota dos indicadores:</span> As métricas abaixo refletem os registros carregados na visualização atual e acompanham os filtros aplicados no dashboard.
         </div>
       </div>
 

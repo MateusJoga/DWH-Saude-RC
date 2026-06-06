@@ -7,7 +7,6 @@ import {
   Home, 
   BarChart3, 
   MessageSquareShare, 
-  Layers, 
   FileBarChart, 
   Settings, 
   Lock, 
@@ -95,10 +94,6 @@ export default function Sidebar() {
             <span>Power BI Embedded</span>
           </Link>
 
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 cursor-not-allowed select-none">
-            <Layers className="h-4.5 w-4.5" />
-            <span>Painel Macro Regional</span>
-          </div>
         </div>
       </div>
 

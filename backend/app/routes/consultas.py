@@ -2,7 +2,7 @@ import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -70,12 +70,12 @@ OURO_VIEWS: dict[str, dict[str, Any]] = {
     },
     "agg_internacoes_mensais": {
         "view": "ouro.agg_internacoes_mensais",
-        "filters": {"ano", "mes", "cnes", "id_hospital"},
+        "filters": {"ano", "mes", "cnes", "id_hospital", "uf_hospital", "especialidade", "complexidade", "grupo_cid", "capitulo_cid"},
         "order_by": "ano DESC, mes DESC, id_hospital ASC",
     },
     "agg_procedimentos_mensais": {
         "view": "ouro.agg_procedimentos_mensais",
-        "filters": {"ano", "mes", "cnes", "codigo_procedimento", "id_hospital"},
+        "filters": {"ano", "mes", "cnes", "codigo_procedimento", "id_hospital", "uf_hospital", "categoria_profissional", "complexidade", "tipo_financiamento"},
         "order_by": "ano DESC, mes DESC, id_hospital ASC, codigo_procedimento ASC",
     },
     "agg_mortalidade_hospital": {
@@ -85,12 +85,12 @@ OURO_VIEWS: dict[str, dict[str, Any]] = {
     },
     "fato_internacoes": {
         "view": "ouro.fato_internacoes",
-        "filters": {"ano", "mes", "cnes", "codigo_cid", "id_hospital"},
+        "filters": {"ano", "mes", "cnes", "codigo_cid", "id_hospital", "sexo", "faixa_etaria", "especialidade", "complexidade", "obito"},
         "order_by": "ano DESC, mes DESC, id_internacao ASC",
     },
     "fato_procedimentos": {
         "view": "ouro.fato_procedimentos",
-        "filters": {"ano", "mes", "cnes", "codigo_cid", "codigo_procedimento", "id_hospital"},
+        "filters": {"ano", "mes", "cnes", "codigo_cid", "codigo_procedimento", "id_hospital", "categoria_profissional", "complexidade"},
         "order_by": "ano DESC, mes DESC, id_procedimento ASC",
     },
     "dim_hospital": {
@@ -130,7 +130,19 @@ OURO_VIEWS: dict[str, dict[str, Any]] = {
     },
 }
 
-LIKE_FILTERS = {"codigo_cid", "codigo_procedimento", "grupo_cid", "uf_hospital"}
+LIKE_FILTERS = {
+    "codigo_cid",
+    "codigo_procedimento",
+    "grupo_cid",
+    "capitulo_cid",
+    "uf_hospital",
+    "sexo",
+    "faixa_etaria",
+    "especialidade",
+    "complexidade",
+    "categoria_profissional",
+    "tipo_financiamento",
+}
 
 
 def _standard_error(view: str, exc: Exception) -> HTTPException:
@@ -159,6 +171,14 @@ def _build_filters(
     id_hospital: int | None = None,
     uf_hospital: str | None = None,
     grupo_cid: str | None = None,
+    sexo: str | None = None,
+    faixa_etaria: str | None = None,
+    especialidade: str | None = None,
+    complexidade: str | None = None,
+    obito: int | None = None,
+    categoria_profissional: str | None = None,
+    capitulo_cid: str | None = None,
+    tipo_financiamento: str | None = None,
 ) -> tuple[str, dict[str, Any]]:
     raw_filters = {
         "ano": ano,
@@ -169,6 +189,14 @@ def _build_filters(
         "id_hospital": id_hospital,
         "uf_hospital": uf_hospital,
         "grupo_cid": grupo_cid,
+        "sexo": sexo,
+        "faixa_etaria": faixa_etaria,
+        "especialidade": especialidade,
+        "complexidade": complexidade,
+        "obito": obito,
+        "categoria_profissional": categoria_profissional,
+        "capitulo_cid": capitulo_cid,
+        "tipo_financiamento": tipo_financiamento,
     }
 
     clauses: list[str] = []
@@ -191,11 +219,21 @@ def _build_filters(
     return " AND " + " AND ".join(clauses), params
 
 
+def _build_order_sql(config: dict[str, Any], order_by: str | None, order_dir: str | None) -> str:
+    if not order_by:
+        return config["order_by"]
+    if not order_by.replace("_", "").isalnum() or order_by[0].isdigit():
+        return config["order_by"]
+    direction = "DESC" if (order_dir or "").lower() == "desc" else "ASC"
+    return f"{order_by} {direction}"
+
+
 def execute_ouro_query(
     db: Session,
     view_key: str,
     limit: int,
     offset: int,
+    response: Response | None = None,
     ano: int | None = None,
     mes: int | None = None,
     cnes: str | None = None,
@@ -204,6 +242,16 @@ def execute_ouro_query(
     id_hospital: int | None = None,
     uf_hospital: str | None = None,
     grupo_cid: str | None = None,
+    sexo: str | None = None,
+    faixa_etaria: str | None = None,
+    especialidade: str | None = None,
+    complexidade: str | None = None,
+    obito: int | None = None,
+    categoria_profissional: str | None = None,
+    capitulo_cid: str | None = None,
+    tipo_financiamento: str | None = None,
+    order_by: str | None = None,
+    order_dir: str | None = None,
 ) -> list[dict[str, Any]]:
     config = OURO_VIEWS[view_key]
     view = config["view"]
@@ -217,17 +265,30 @@ def execute_ouro_query(
         id_hospital=id_hospital,
         uf_hospital=uf_hospital,
         grupo_cid=grupo_cid,
+        sexo=sexo,
+        faixa_etaria=faixa_etaria,
+        especialidade=especialidade,
+        complexidade=complexidade,
+        obito=obito,
+        categoria_profissional=categoria_profissional,
+        capitulo_cid=capitulo_cid,
+        tipo_financiamento=tipo_financiamento,
     )
+    order_sql = _build_order_sql(config, order_by, order_dir)
 
     query = (
         f"SELECT * FROM {view} WHERE 1=1{where_sql} "
-        f"ORDER BY {config['order_by']} "
+        f"ORDER BY {order_sql} "
         "OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
     )
     params["offset"] = offset
     params["limit"] = limit
 
     try:
+        if response is not None:
+            count_query = f"SELECT COUNT(1) AS total FROM {view} WHERE 1=1{where_sql}"
+            count_result = db.execute(text(count_query), params).scalar_one()
+            response.headers["X-Total-Count"] = str(count_result)
         return _rows(db.execute(text(query), params))
     except Exception as exc:
         raise _standard_error(view, exc)
@@ -257,6 +318,7 @@ def execute_dashboard_query(db: Session, query: str, params: dict[str, Any], vie
 @router.get("/hospitais", response_model=List[AggHospitalResponse])
 @router.get("/agg-hospital-mensal", response_model=List[AggHospitalResponse])
 def get_hospitais(
+    response: Response,
     ano: Optional[int] = Query(None, description="Filtrar por ano específico (Ex: 2023)"),
     mes: Optional[int] = Query(None, description="Filtrar por mês específico (1 a 12)"),
     uf_hospital: Optional[str] = Query(None, description="Filtrar por sigla do estado (Ex: SP)"),
@@ -264,6 +326,8 @@ def get_hospitais(
     id_hospital: Optional[int] = Query(None, description="Filtrar pelo ID do hospital"),
     limit: int = Query(100, ge=1, le=AGG_LIMIT, description="Número máximo de registros a retornar"),
     offset: int = Query(0, ge=0, description="Número de registros a pular (paginação)"),
+    order_by: Optional[str] = Query(None),
+    order_dir: Optional[str] = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     return execute_ouro_query(
@@ -271,23 +335,29 @@ def get_hospitais(
         "agg_hospital_mensal",
         limit,
         offset,
+        response=response,
         ano=ano,
         mes=mes,
         cnes=cnes,
         id_hospital=id_hospital,
         uf_hospital=uf_hospital,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
 @router.get("/cids", response_model=List[AggCidResponse])
 @router.get("/agg-cid-mensal", response_model=List[AggCidResponse])
 def get_cids(
+    response: Response,
     ano: Optional[int] = Query(None, description="Filtrar por ano específico (Ex: 2023)"),
     mes: Optional[int] = Query(None, description="Filtrar por mês específico (1 a 12)"),
     codigo_cid: Optional[str] = Query(None, description="Filtrar por código ou prefixo do CID (Ex: I10)"),
     grupo_cid: Optional[str] = Query(None, description="Filtrar por descrição do grupo CID"),
     limit: int = Query(100, ge=1, le=AGG_LIMIT, description="Número máximo de registros a retornar"),
     offset: int = Query(0, ge=0, description="Número de registros a pular (paginação)"),
+    order_by: Optional[str] = Query(None),
+    order_dir: Optional[str] = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     return execute_ouro_query(
@@ -295,37 +365,70 @@ def get_cids(
         "agg_cid_mensal",
         limit,
         offset,
+        response=response,
         ano=ano,
         mes=mes,
         codigo_cid=codigo_cid,
         grupo_cid=grupo_cid,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
 @router.get("/agg-internacoes-mensais", response_model=List[Dict[str, Any]])
 def get_agg_internacoes_mensais(
+    response: Response,
     ano: Optional[int] = Query(None),
     mes: Optional[int] = Query(None),
     cnes: Optional[str] = Query(None),
     id_hospital: Optional[int] = Query(None),
+    uf_hospital: Optional[str] = Query(None),
+    especialidade: Optional[str] = Query(None),
+    complexidade: Optional[str] = Query(None),
+    grupo_cid: Optional[str] = Query(None),
+    capitulo_cid: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=AGG_LIMIT),
     offset: int = Query(0, ge=0),
+    order_by: Optional[str] = Query(None),
+    order_dir: Optional[str] = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     return execute_ouro_query(
-        db, "agg_internacoes_mensais", limit, offset, ano=ano, mes=mes, cnes=cnes, id_hospital=id_hospital
+        db,
+        "agg_internacoes_mensais",
+        limit,
+        offset,
+        response=response,
+        ano=ano,
+        mes=mes,
+        cnes=cnes,
+        id_hospital=id_hospital,
+        uf_hospital=uf_hospital,
+        especialidade=especialidade,
+        complexidade=complexidade,
+        grupo_cid=grupo_cid,
+        capitulo_cid=capitulo_cid,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
 @router.get("/agg-procedimentos-mensais", response_model=List[Dict[str, Any]])
 def get_agg_procedimentos_mensais(
+    response: Response,
     ano: Optional[int] = Query(None),
     mes: Optional[int] = Query(None),
     cnes: Optional[str] = Query(None),
     codigo_procedimento: Optional[str] = Query(None),
     id_hospital: Optional[int] = Query(None),
+    uf_hospital: Optional[str] = Query(None),
+    categoria_profissional: Optional[str] = Query(None),
+    complexidade: Optional[str] = Query(None),
+    tipo_financiamento: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=AGG_LIMIT),
     offset: int = Query(0, ge=0),
+    order_by: Optional[str] = Query(None),
+    order_dir: Optional[str] = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     return execute_ouro_query(
@@ -333,38 +436,66 @@ def get_agg_procedimentos_mensais(
         "agg_procedimentos_mensais",
         limit,
         offset,
+        response=response,
         ano=ano,
         mes=mes,
         cnes=cnes,
         codigo_procedimento=codigo_procedimento,
         id_hospital=id_hospital,
+        uf_hospital=uf_hospital,
+        categoria_profissional=categoria_profissional,
+        complexidade=complexidade,
+        tipo_financiamento=tipo_financiamento,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
 @router.get("/agg-mortalidade-hospital", response_model=List[Dict[str, Any]])
 def get_agg_mortalidade_hospital(
+    response: Response,
     ano: Optional[int] = Query(None),
     mes: Optional[int] = Query(None),
     cnes: Optional[str] = Query(None),
     id_hospital: Optional[int] = Query(None),
     limit: int = Query(100, ge=1, le=AGG_LIMIT),
     offset: int = Query(0, ge=0),
+    order_by: Optional[str] = Query(None),
+    order_dir: Optional[str] = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     return execute_ouro_query(
-        db, "agg_mortalidade_hospital", limit, offset, ano=ano, mes=mes, cnes=cnes, id_hospital=id_hospital
+        db,
+        "agg_mortalidade_hospital",
+        limit,
+        offset,
+        response=response,
+        ano=ano,
+        mes=mes,
+        cnes=cnes,
+        id_hospital=id_hospital,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
 @router.get("/fato-internacoes", response_model=List[Dict[str, Any]])
 def get_fato_internacoes(
+    response: Response,
     ano: Optional[int] = Query(None),
     mes: Optional[int] = Query(None),
     cnes: Optional[str] = Query(None),
     codigo_cid: Optional[str] = Query(None),
     id_hospital: Optional[int] = Query(None),
+    sexo: Optional[str] = Query(None),
+    faixa_etaria: Optional[str] = Query(None),
+    especialidade: Optional[str] = Query(None),
+    complexidade: Optional[str] = Query(None),
+    obito: Optional[int] = Query(None, ge=0, le=1),
     limit: int = Query(100, ge=1, le=FATO_LIMIT),
     offset: int = Query(0, ge=0),
+    order_by: Optional[str] = Query(None),
+    order_dir: Optional[str] = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     return execute_ouro_query(
@@ -372,24 +503,37 @@ def get_fato_internacoes(
         "fato_internacoes",
         limit,
         offset,
+        response=response,
         ano=ano,
         mes=mes,
         cnes=cnes,
         codigo_cid=codigo_cid,
         id_hospital=id_hospital,
+        sexo=sexo,
+        faixa_etaria=faixa_etaria,
+        especialidade=especialidade,
+        complexidade=complexidade,
+        obito=obito,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
 @router.get("/fato-procedimentos", response_model=List[Dict[str, Any]])
 def get_fato_procedimentos(
+    response: Response,
     ano: Optional[int] = Query(None),
     mes: Optional[int] = Query(None),
     cnes: Optional[str] = Query(None),
     codigo_cid: Optional[str] = Query(None),
     codigo_procedimento: Optional[str] = Query(None),
     id_hospital: Optional[int] = Query(None),
+    categoria_profissional: Optional[str] = Query(None),
+    complexidade: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=FATO_LIMIT),
     offset: int = Query(0, ge=0),
+    order_by: Optional[str] = Query(None),
+    order_dir: Optional[str] = Query(None, pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
     return execute_ouro_query(
@@ -397,12 +541,17 @@ def get_fato_procedimentos(
         "fato_procedimentos",
         limit,
         offset,
+        response=response,
         ano=ano,
         mes=mes,
         cnes=cnes,
         codigo_cid=codigo_cid,
         codigo_procedimento=codigo_procedimento,
         id_hospital=id_hospital,
+        categoria_profissional=categoria_profissional,
+        complexidade=complexidade,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
