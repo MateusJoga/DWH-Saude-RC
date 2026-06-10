@@ -4,7 +4,7 @@ CREATE TABLE prata.cnes (
     id_cnes INT IDENTITY(1,1) PRIMARY KEY,
 
     -- Identificador negócio
-    cnes CHAR(7) NOT NULL,,
+    cnes CHAR(7) NOT NULL,
 
     -- Localização
     codigo_municipio CHAR(6) NOT NULL,

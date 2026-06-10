@@ -5,7 +5,7 @@ import AggregateTable from "@/components/AggregateTable";
 import CidTable from "@/components/CidTable";
 import FactDetailTable from "@/components/FactDetailTable";
 import HospitalTable from "@/components/HospitalTable";
-import KPICards from "@/components/KPICards";
+import KPICards, { DashboardResumo } from "@/components/KPICards";
 import {
   CidAggregation,
   CidFilters,
@@ -27,12 +27,15 @@ const DEFAULT_FILTERS = { limit: 20, offset: 0 };
 
 export default function DashboardPage() {
   const [hospitais, setHospitais] = useState<HospitalAggregation[]>([]);
+  const [kpiHospitais, setKpiHospitais] = useState<HospitalAggregation[]>([]);
   const [cids, setCids] = useState<CidAggregation[]>([]);
   const [fatoInternacoes, setFatoInternacoes] = useState<FatoInternacao[]>([]);
   const [fatoProcedimentos, setFatoProcedimentos] = useState<FatoProcedimento[]>([]);
   const [aggInternacoes, setAggInternacoes] = useState<GenericTableRow[]>([]);
   const [aggProcedimentos, setAggProcedimentos] = useState<GenericTableRow[]>([]);
   const [aggMortalidade, setAggMortalidade] = useState<GenericTableRow[]>([]);
+  const [resumo, setResumo] = useState<DashboardResumo | null>(null);
+  const [loadingResumo, setLoadingResumo] = useState(true);
 
   const [totalHospitais, setTotalHospitais] = useState(0);
   const [totalCids, setTotalCids] = useState(0);
@@ -49,6 +52,7 @@ export default function DashboardPage() {
   const [loadingAggInternacoes, setLoadingAggInternacoes] = useState(true);
   const [loadingAggProcedimentos, setLoadingAggProcedimentos] = useState(true);
   const [loadingAggMortalidade, setLoadingAggMortalidade] = useState(true);
+  const [loadingKpis, setLoadingKpis] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -172,6 +176,44 @@ export default function DashboardPage() {
     carregar();
   }, [cidFilters]);
 
+  useEffect(() => {
+  async function carregarKpis() {
+    setLoadingKpis(true);
+
+    try {
+      const result = await getHospitais({
+        limit: 10000,
+        offset: 0,
+      });
+
+      setKpiHospitais(result.data);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Erro ao carregar indicadores consolidados.");
+    } finally {
+      setLoadingKpis(false);
+    }
+  }
+
+  carregarKpis();
+  }, []);
+
+  useEffect(() => {
+  async function carregarResumo() {
+    setLoadingResumo(true);
+
+    try {
+      const data = await getResumoDashboard();
+      setResumo(data);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Erro ao carregar resumo do dashboard.");
+    } finally {
+      setLoadingResumo(false);
+    }
+  }
+
+  carregarResumo();
+  }, []);
+
   const internacoesMensaisColumns = [
     { key: "ano", label: "Ano" },
     { key: "mes", label: "Mês" },
@@ -243,7 +285,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <KPICards hospitalData={hospitais} loading={loadingHospitais} />
+      <KPICards resumo={resumo} loading={loadingResumo} />
 
       {errorMessage && (
         <div className="p-4 rounded-xl border border-red-900/50 bg-red-950/20 flex gap-3 text-xs text-red-400 items-start">
