@@ -20,12 +20,6 @@ export default function HomePage() {
       {/* Seção Hero: Apresentação Principal */}
       <section className="text-center space-y-6 py-8 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-blue-500/10 blur-3xl opacity-30 -z-10 rounded-full" />
-        
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-950/40 text-teal-400 border border-teal-900/60 text-xs font-semibold uppercase tracking-wider mb-2">
-          <SparklesIcon className="h-3.5 w-3.5" />
-          <span>Etapa 2: Portal Analítico Ativo</span>
-        </div>
-
         <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
           Health Data Warehouse <br />
           <span className="bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
@@ -171,27 +165,5 @@ export default function HomePage() {
         </div>
       </section>
     </div>
-  );
-}
-
-// Pequeno ícone customizado
-function SparklesIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z" />
-      <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z" />
-      <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1.5Z" />
-    </svg>
   );
 }

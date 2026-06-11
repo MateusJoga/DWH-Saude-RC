@@ -28,11 +28,11 @@ SELECT
     i.numero_aih,
 
     i.data_referencia,
-    YEAR(i.data_referencia) AS ano,
-    MONTH(i.data_referencia) AS mes,
-    DATENAME(MONTH, i.data_referencia) AS nome_mes,
-    DATEPART(QUARTER, i.data_referencia) AS trimestre,
-    CASE WHEN MONTH(i.data_referencia) <= 6 THEN 1 ELSE 2 END AS semestre,
+    t.ano,
+    t.mes,
+    t.nome_mes,
+    t.trimestre,
+    t.semestre,
 
     h.id_hospital,
     i.cnes,
@@ -71,6 +71,9 @@ SELECT
     1 AS quantidade_internacoes
 
 FROM prata.sih_internacoes i
+
+LEFT JOIN ouro.dim_tempo t
+    ON i.data_referencia = t.data
 
 LEFT JOIN dim_hospital_unica h
     ON i.cnes = h.cnes

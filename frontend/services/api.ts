@@ -444,16 +444,6 @@ export async function getTopProcedimentos(filters: { ano?: number; mes?: number;
   return res.json();
 }
 
-export async function getResumoDashboard() {
-  const response = await fetch(`${API_BASE_URL}/consultas/resumo`);
-
-  if (!response.ok) {
-    throw new Error("Erro ao buscar resumo do dashboard.");
-  }
-
-  return response.json();
-}
-
 /**
  * Envia uma pergunta em linguagem natural para o endpoint do Assistente de IA.
  */

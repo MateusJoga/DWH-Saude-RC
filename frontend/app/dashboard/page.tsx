@@ -16,6 +16,7 @@ import {
   HospitalAggregation,
   HospitalFilters,
   getCids,
+  getDashboardResumo,
   getFatoInternacoes,
   getFatoProcedimentos,
   getHospitais,
@@ -27,7 +28,6 @@ const DEFAULT_FILTERS = { limit: 20, offset: 0 };
 
 export default function DashboardPage() {
   const [hospitais, setHospitais] = useState<HospitalAggregation[]>([]);
-  const [kpiHospitais, setKpiHospitais] = useState<HospitalAggregation[]>([]);
   const [cids, setCids] = useState<CidAggregation[]>([]);
   const [fatoInternacoes, setFatoInternacoes] = useState<FatoInternacao[]>([]);
   const [fatoProcedimentos, setFatoProcedimentos] = useState<FatoProcedimento[]>([]);
@@ -52,7 +52,6 @@ export default function DashboardPage() {
   const [loadingAggInternacoes, setLoadingAggInternacoes] = useState(true);
   const [loadingAggProcedimentos, setLoadingAggProcedimentos] = useState(true);
   const [loadingAggMortalidade, setLoadingAggMortalidade] = useState(true);
-  const [loadingKpis, setLoadingKpis] = useState(true);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -177,32 +176,11 @@ export default function DashboardPage() {
   }, [cidFilters]);
 
   useEffect(() => {
-  async function carregarKpis() {
-    setLoadingKpis(true);
-
-    try {
-      const result = await getHospitais({
-        limit: 10000,
-        offset: 0,
-      });
-
-      setKpiHospitais(result.data);
-    } catch (err: any) {
-      setErrorMessage(err.message || "Erro ao carregar indicadores consolidados.");
-    } finally {
-      setLoadingKpis(false);
-    }
-  }
-
-  carregarKpis();
-  }, []);
-
-  useEffect(() => {
   async function carregarResumo() {
     setLoadingResumo(true);
 
     try {
-      const data = await getResumoDashboard();
+      const data = await getDashboardResumo();
       setResumo(data);
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao carregar resumo do dashboard.");
