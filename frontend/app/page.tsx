@@ -20,12 +20,6 @@ export default function HomePage() {
       {/* Seção Hero: Apresentação Principal */}
       <section className="text-center space-y-6 py-8 relative">
         <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-blue-500/10 blur-3xl opacity-30 -z-10 rounded-full" />
-        
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-950/40 text-teal-400 border border-teal-900/60 text-xs font-semibold uppercase tracking-wider mb-2">
-          <SparklesIcon className="h-3.5 w-3.5" />
-          <span>Etapa 2: Portal Analítico Ativo</span>
-        </div>
-
         <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
           Health Data Warehouse <br />
           <span className="bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
@@ -120,74 +114,56 @@ export default function HomePage() {
             </div>
             <div className="mt-5 pt-4 border-t border-gray-800/50 flex items-center gap-2 text-[10px] text-gray-500">
               <CheckCircle2 className="h-3.5 w-3.5 text-teal-400" />
-              <span>Views `agg_hospital` e `agg_cid`</span>
+              <span>Views `fato_internacoes` e `agg_cid`</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Seção Adicional: Benefícios e Roadmap IA */}
+      {/* Seção Adicional: Benefícios para Gestão em Saúde */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-800/80">
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Cpu className="h-5 w-5 text-teal-400" />
-            Roadmap IA Generativa
+            Respostas em Segundos
           </h3>
           <p className="text-xs text-gray-400 leading-relaxed">
-            Nesta etapa preparatória, construímos o barramento semântico mockado. Na próxima iteração, 
-            integraremos a API do <strong className="text-teal-400">Google Gemini</strong> ou OpenAI com o framework LangChain. Isso permitirá que gestores digitem perguntas livres como:
+            A plataforma transforma dados complexos da saúde em informações úteis, ajudando gestores,
+            secretarias, hospitais e tomadores de decisão a compreender cenários, priorizar ações e
+            acompanhar resultados com mais clareza.
           </p>
           <div className="rounded-lg bg-[#0F172A] border border-gray-800 p-3.5 text-[11px] font-mono text-gray-400 leading-relaxed italic">
-            &ldquo;Quais patologias de cardiologia tiveram tempo de permanência maior que 5 dias em Rio Claro no ano passado?&rdquo;
+            <p>&ldquo;Quais doenças tiveram mais internações?&rdquo;</p>
+            <p>&ldquo;Qual hospital registrou mais óbitos?&rdquo;</p>
+            <p>&ldquo;Quais procedimentos tiveram maior custo?&rdquo;</p>
           </div>
           <p className="text-xs text-gray-400 leading-relaxed">
-            A IA analisará a pergunta, gerará a query SQL Server perfeita e responderá com tabelas e relatórios customizados dinamicamente.
+            Com consultas em linguagem natural, gestores podem obter respostas rapidamente, sem depender
+            de planilhas dispersas ou solicitações técnicas para cada nova análise.
           </p>
         </div>
 
         <div className="space-y-4">
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-blue-400" />
-            Prontidão Tecnológica
+            Gestão Baseada em Dados
           </h3>
           <ul className="space-y-3 text-xs text-gray-400">
             <li className="flex items-start gap-2.5">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-400 mt-1.5 shrink-0" />
-              <span><strong>Next.js 14 & Tailwind:</strong> Performance excepcional, design fluido com HSL e acentos neon.</span>
+              <span><strong>Visão Consolidada:</strong> Centralização das informações de internações, procedimentos, custos e indicadores hospitalares em um único ambiente.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-400 mt-1.5 shrink-0" />
-              <span><strong>FastAPI Connection:</strong> Conexão segura e pool de persistência com o Microsoft SQL Server.</span>
+              <span><strong>Mais Agilidade:</strong> Redução do tempo necessário para localizar informações e gerar análises gerenciais.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="h-1.5 w-1.5 rounded-full bg-teal-400 mt-1.5 shrink-0" />
-              <span><strong>Preparado para Power BI:</strong> Estrutura lateral pronta para embutir relatórios integrados via iframe seguro ou SDK JS.</span>
+              <span><strong>Indicadores Estratégicos:</strong> Acompanhamento de internações, mortalidade, custos, permanência hospitalar e demais indicadores para suporte à gestão.</span>
             </li>
           </ul>
         </div>
       </section>
     </div>
-  );
-}
-
-// Pequeno ícone customizado
-function SparklesIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z" />
-      <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5Z" />
-      <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1.5Z" />
-    </svg>
   );
 }

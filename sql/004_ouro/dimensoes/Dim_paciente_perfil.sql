@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_paciente_perfil AS
+CREATE OR ALTER VIEW ouro.dim_paciente_perfil AS
 
 SELECT DISTINCT
     CONCAT(

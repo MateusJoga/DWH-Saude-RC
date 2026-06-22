@@ -89,8 +89,11 @@ FROM bronze.sih_sp b
 WHERE NOT EXISTS (
     SELECT 1
     FROM prata.sih_procedimentos p
-    WHERE
-        p.numero_aih = b.SP_NAIH
-        AND p.codigo_procedimento = b.SP_PROCREA
-        AND p.codigo_ato_profissional = b.SP_ATOPROF
+    WHERE p.numero_aih = b.SP_NAIH
+      AND p.competencia = CONCAT(b.SP_AA, RIGHT('00' + CAST(b.SP_MM AS VARCHAR), 2))
+      AND p.data_internacao = CONVERT(DATE, b.SP_DTINTER, 112)
+      AND p.data_saida = CONVERT(DATE, b.SP_DTSAIDA, 112)
+      AND p.codigo_procedimento = b.SP_PROCREA
+      AND p.codigo_ato_profissional = b.SP_ATOPROF
+      AND p.cbo_profissional = b.SP_PF_CBO
 );

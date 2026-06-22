@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_municipio AS
+CREATE OR ALTER VIEW ouro.dim_municipio AS
 
 SELECT DISTINCT
     codigo_municipio,

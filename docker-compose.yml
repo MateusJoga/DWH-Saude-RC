@@ -6,10 +6,18 @@ services:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "${SQLSERVER_PASSWORD}"
     ports:
-      - "11433:1433"  # Porta 11433 exposta para acesso externo (SSMS, Power BI, Excel, DBeaver)
+      - "11433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
     restart: always
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools18/bin/sqlcmd", "-C", "-S", "localhost", "-U", "sa", "-P", "${SQLSERVER_PASSWORD}", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - dw_net
 
   backend:
     build:
@@ -17,17 +25,27 @@ services:
       dockerfile: Dockerfile
     container_name: dw_backend
     ports:
-      - "8000:8000"  # Porta 8000 exposta para a API FastAPI (Swagger, Frontend, Integrações)
+      - "8000:8000"
     environment:
-      - SQLSERVER_HOST=${SQLSERVER_HOST}
-      - SQLSERVER_PORT=${SQLSERVER_PORT}
+      - SQLSERVER_HOST=sqlserver
+      - SQLSERVER_PORT=1433
       - SQLSERVER_DB=${SQLSERVER_DB}
       - SQLSERVER_USER=${SQLSERVER_USER}
       - SQLSERVER_PASSWORD=${SQLSERVER_PASSWORD}
       - SQLSERVER_DRIVER=${SQLSERVER_DRIVER}
+      - SQLSERVER_IA_USER=${SQLSERVER_IA_USER:-}
+      - SQLSERVER_IA_PASSWORD=${SQLSERVER_IA_PASSWORD:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-none}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-}
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
     restart: always
+    networks:
+      - dw_net
 
   frontend:
     build:
@@ -35,12 +53,34 @@ services:
       dockerfile: Dockerfile
     container_name: dw_frontend
     ports:
-      - "3000:3000"  # Porta 3000 exposta para o Next.js (Dashboard e Chat IA)
+      - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: "http://localhost:8000"  # URL pública da API do backend
+      NEXT_PUBLIC_API_URL: "http://localhost:8000"
     depends_on:
       - backend
     restart: always
+    networks:
+      - dw_net
+
+  extractor:
+    build:
+      context: ./extractor
+      dockerfile: Dockerfile
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    profiles:
+      - tools
+    networks:
+      - dw_net
 
 volumes:
   sqlserver_data:
+
+networks:
+  dw_net:                                # 👈 Cria a ponte de comunicação limpa
+    driver: bridge
