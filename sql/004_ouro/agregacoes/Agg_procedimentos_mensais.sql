@@ -1,4 +1,4 @@
-CREATE VIEW ouro.agg_procedimentos_mensais AS
+CREATE OR ALTER VIEW ouro.agg_procedimentos_mensais AS
 
 SELECT
     -- Tempo

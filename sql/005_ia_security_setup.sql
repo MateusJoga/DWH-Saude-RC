@@ -17,7 +17,7 @@ GO
 -- 1. Criação do Login no nível do servidor com senha (substitua a senha abaixo)
 IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = 'dw_ia_login')
 BEGIN
-    CREATE LOGIN dw_ia_login WITH PASSWORD = 'SUA_SENHA_DE_DEMONSTRACAO_AQUI_123!', 
+    CREATE LOGIN dw_ia_login WITH PASSWORD = 'IA_Segura_Health_123!', 
     CHECK_EXPIRATION = OFF, 
     CHECK_POLICY = ON;
 END;
@@ -42,7 +42,7 @@ GRANT SELECT ON SCHEMA::ouro TO dw_ia_user;
 GO
 
 -- 5. Negação explícita de qualquer escrita (DML) na camada Ouro (segurança extra)
-DENY INSERT, UPDATE, DELETE, ALTER, CONTROL ON SCHEMA::ouro TO dw_ia_user;
+DENY INSERT, UPDATE, DELETE, ALTER ON SCHEMA::ouro TO dw_ia_user;
 GO
 
 -- 6. Negação física de leitura/escrita e DDL nos schemas Bronze e Prata (Zero Trust absoluto)

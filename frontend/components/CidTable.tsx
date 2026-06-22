@@ -2,16 +2,18 @@
 
 import React, { useState } from "react";
 import { CidAggregation, CidFilters } from "@/services/api";
-import { Filter, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { Filter, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, RefreshCw } from "lucide-react";
 
 interface CidTableProps {
   data: CidAggregation[];
+  total: number;
   loading: boolean;
   onFilterChange: (filters: CidFilters) => void;
   filters: CidFilters;
 }
 
-export default function CidTable({ data, loading, onFilterChange, filters }: CidTableProps) {
+export default function CidTable({ data, total, loading, onFilterChange, filters }: CidTableProps) {
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [localFilters, setLocalFilters] = useState({
     ano: filters.ano?.toString() || "",
     mes: filters.mes?.toString() || "",
@@ -19,9 +21,24 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
     grupo_cid: filters.grupo_cid || "",
   });
 
-  const limit = filters.limit ?? 100;
+  const limit = filters.limit ?? 20;
   const offset = filters.offset ?? 0;
   const currentPage = Math.floor(offset / limit) + 1;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const canGoNext = total > 0 ? currentPage < totalPages : data.length === limit;
+
+  const alterarOrdenacao = (columnKey: string) => {
+    const nextDirection = filters.order_by === columnKey && filters.order_dir === "asc" ? "desc" : "asc";
+    onFilterChange({ ...filters, order_by: columnKey, order_dir: nextDirection, offset: 0 });
+  };
+
+  const renderHeader = (label: string, columnKey: string, align = "") => (
+    <th className={`px-4 py-3 ${align}`}>
+      <button type="button" onClick={() => alterarOrdenacao(columnKey)} className="font-bold hover:text-teal-400 transition-colors">
+        {label}{filters.order_by === columnKey ? (filters.order_dir === "desc" ? " ↓" : " ↑") : ""}
+      </button>
+    </th>
+  );
 
   const aplicarFiltros = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +47,9 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
       mes: localFilters.mes ? Number(localFilters.mes) : undefined,
       codigo_cid: localFilters.codigo_cid || undefined,
       grupo_cid: localFilters.grupo_cid || undefined,
+      limit,
+      order_by: filters.order_by,
+      order_dir: filters.order_dir,
       offset: 0,
     });
   };
@@ -41,6 +61,9 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
       mes: undefined,
       codigo_cid: undefined,
       grupo_cid: undefined,
+      limit,
+      order_by: filters.order_by,
+      order_dir: filters.order_dir,
       offset: 0,
     });
   };
@@ -75,10 +98,19 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
             <Filter className="h-5 w-5 text-teal-400" />
             <h2 className="text-sm font-bold uppercase tracking-wider text-white">Internações por Patologia (CID)</h2>
           </div>
-          <span className="text-[10px] font-mono text-gray-400">Camada: <span className="text-yellow-400 font-bold">Ouro</span></span>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((value) => !value)}
+            className="h-8 w-8 rounded-lg border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors flex items-center justify-center"
+            title={isCollapsed ? "Expandir tabela" : "Minimizar tabela"}
+            aria-label={isCollapsed ? "Expandir tabela" : "Minimizar tabela"}
+          >
+            {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Formulário de busca */}
+        {!isCollapsed && (
         <form onSubmit={aplicarFiltros} className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-5 items-end">
           {/* Ano */}
           <div>
@@ -149,22 +181,25 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
             </button>
           </div>
         </form>
+        )}
       </div>
 
       {/* Grid da Tabela */}
+      {!isCollapsed && (
+      <>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead className="bg-[#121A2B] text-gray-400 uppercase text-[10px] tracking-wider border-b border-gray-800">
             <tr>
-              <th className="px-4 py-3">Competência</th>
-              <th className="px-4 py-3">Código CID</th>
-              <th className="px-4 py-3">Grupo / Capítulo Diagnóstico</th>
-              <th className="px-4 py-3 text-right">Internações</th>
-              <th className="px-4 py-3 text-right">Custo Total</th>
-              <th className="px-4 py-3 text-right">Custo UTI</th>
-              <th className="px-4 py-3 text-right">Permanência</th>
-              <th className="px-4 py-3 text-right">Óbitos (%)</th>
-              <th className="px-4 py-3 text-right">L. Perm.</th>
+              {renderHeader("Competência", "ano")}
+              {renderHeader("Código CID", "codigo_cid")}
+              {renderHeader("Grupo / Capítulo Diagnóstico", "grupo_cid")}
+              {renderHeader("Internações", "quantidade_internacoes", "text-right")}
+              {renderHeader("Custo Total", "valor_total_internacoes", "text-right")}
+              {renderHeader("Custo UTI", "valor_total_uti", "text-right")}
+              {renderHeader("Permanência", "media_dias_permanencia", "text-right")}
+              {renderHeader("Óbitos (%)", "quantidade_obitos", "text-right")}
+              {renderHeader("L. Perm.", "quantidade_longa_permanencia", "text-right")}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800/60 font-mono text-gray-300">
@@ -173,7 +208,7 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
                 <td colSpan={9} className="px-4 py-12 text-center text-gray-500 text-sm">
                   <div className="flex items-center justify-center gap-2">
                     <RefreshCw className="h-5 w-5 text-teal-400 animate-spin" />
-                    <span>Carregando dados da camada Ouro...</span>
+                    <span>Carregando dados...</span>
                   </div>
                 </td>
               </tr>
@@ -221,7 +256,7 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
       {/* Paginação */}
       <div className="px-5 py-4 border-t border-gray-800 bg-[#121A2B] flex items-center justify-between">
         <span className="text-xs text-gray-400">
-          Página <span className="text-white font-bold">{currentPage}</span> {data.length > 0 && `(Mostrando ${data.length} registros)`}
+          Página <span className="text-white font-bold">{currentPage}</span> de <span className="text-white font-bold">{totalPages}</span> | 20 registros por página | Total: <span className="text-white font-bold">{formatarNumero(total)}</span>
         </span>
         
         <div className="flex gap-2">
@@ -238,7 +273,7 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
           <button
             type="button"
             onClick={() => mudarPagina("proxima")}
-            disabled={data.length < limit || loading}
+            disabled={!canGoNext || loading}
             className="h-8 px-3 rounded-lg border border-gray-700 text-xs font-semibold text-gray-300 hover:bg-gray-800 hover:text-white disabled:opacity-30 disabled:hover:bg-transparent transition-colors flex items-center gap-1"
           >
             Próxima
@@ -246,6 +281,8 @@ export default function CidTable({ data, loading, onFilterChange, filters }: Cid
           </button>
         </div>
       </div>
+      </>
+      )}
     </div>
   );
 }

@@ -4,7 +4,7 @@ CREATE TABLE prata.sih_internacoes (
     id_internacao INT IDENTITY(1,1) PRIMARY KEY,
 
     -- Identificador negócio
-    numero_aih VARCHAR(20) UNIQUE NOT NULL,
+    numero_aih VARCHAR(20) NOT NULL,
 
     -- Localização
     codigo_uf_zona CHAR(6),
@@ -73,5 +73,14 @@ CREATE TABLE prata.sih_internacoes (
 
     -- Auditoria
     data_ingestao DATETIME2 DEFAULT GETDATE()
+
+    CONSTRAINT uq_sih_internacoes_evento
+    UNIQUE (
+        numero_aih,
+        competencia,
+        data_internacao,
+        data_saida,
+        tipo_identificacao
+    )
 
 );

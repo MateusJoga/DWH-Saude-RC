@@ -7,7 +7,6 @@ import {
   Home, 
   BarChart3, 
   MessageSquareShare, 
-  Layers, 
   FileBarChart, 
   Settings, 
   Lock, 
@@ -76,25 +75,25 @@ export default function Sidebar() {
           </Link>
         </nav>
 
-        {/* Bloco Preparatório: Relatórios Power BI */}
+        {/* Relatórios Power BI */}
         <div className="flex flex-col gap-1.5 pt-4 border-t border-gray-800/80">
           <div className="flex justify-between items-center px-2 mb-2">
             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Dashboards BI</span>
-            <span className="text-[8px] bg-blue-900/50 text-blue-300 font-bold px-1.5 py-0.5 rounded border border-blue-800">EM BREVE</span>
+            <span className="text-[8px] bg-teal-950/40 text-teal-400 font-bold px-1.5 py-0.5 rounded border border-teal-900/60">ATIVO</span>
           </div>
 
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 cursor-not-allowed select-none group relative">
-            <FileBarChart className="h-4.5 w-4.5 group-hover:text-blue-400" />
+          <Link
+            href="/powerbi"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              isActive("/powerbi") 
+                ? "bg-blue-500/10 text-blue-400 border-l-2 border-blue-400 font-semibold" 
+                : "hover:bg-gray-850 hover:text-white"
+            }`}
+          >
+            <FileBarChart className="h-4.5 w-4.5 text-blue-400" />
             <span>Power BI Embedded</span>
-            <span className="absolute hidden group-hover:block bg-gray-900 border border-gray-700 text-[10px] p-2 rounded -top-8 left-6 text-white z-50 shadow-xl w-48">
-              Integração direta com workspace corporativo do Power BI via REST API.
-            </span>
-          </div>
+          </Link>
 
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-500 cursor-not-allowed select-none">
-            <Layers className="h-4.5 w-4.5" />
-            <span>Painel Macro Regional</span>
-          </div>
         </div>
       </div>
 

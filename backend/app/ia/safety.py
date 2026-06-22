@@ -11,6 +11,7 @@ BLACKLISTED_WORDS = [
 
 # Símbolos suspeitos que tentam quebrar ou emendar queries SQL
 SUSPICIOUS_SYMBOLS = [";", "--", "/*", "*/", "xp_"]
+BLOCKED_SCHEMAS = ["BRONZE", "PRATA", "SYS", "DBO", "INFORMATION_SCHEMA"]
 
 def is_query_safe(pergunta: str) -> bool:
     """
@@ -34,6 +35,12 @@ def is_query_safe(pergunta: str) -> bool:
         padrao = rf"\b{palavra}\b"
         if re.search(padrao, texto_upper):
             logger.warning(f"Segurança Interceptou palavra-chave proibida '{palavra}' na pergunta: '{pergunta}'")
+            return False
+
+    for schema in BLOCKED_SCHEMAS:
+        padrao_schema = rf"\b{schema}\b|\b{schema}\."
+        if re.search(padrao_schema, texto_upper):
+            logger.warning(f"Segurança Interceptou schema proibido '{schema}' na pergunta: '{pergunta}'")
             return False
 
     return True

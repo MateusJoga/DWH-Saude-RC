@@ -180,4 +180,10 @@ SELECT
     -- Auditoria
     GETDATE() AS data_ingestao
 
-FROM bronze.cnes;
+FROM bronze.cnes b
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM prata.cnes p
+    WHERE p.cnes = b.CNES
+      AND p.competencia = b.COMPETEN
+);

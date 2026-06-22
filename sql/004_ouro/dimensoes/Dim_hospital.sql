@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_hospital AS
+CREATE OR ALTER VIEW ouro.dim_hospital AS
 
 SELECT
     id_cnes AS id_hospital,

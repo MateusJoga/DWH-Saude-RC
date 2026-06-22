@@ -1,4 +1,4 @@
-CREATE VIEW ouro.dim_internacao_tipo AS
+CREATE OR ALTER VIEW ouro.dim_internacao_tipo AS
 
 SELECT DISTINCT
 

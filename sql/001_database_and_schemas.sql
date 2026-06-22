@@ -35,3 +35,21 @@ GO
 
 CREATE SCHEMA ouro;
 GO
+
+CREATE SCHEMA controle;
+GO
+
+CREATE TABLE controle.cargas_dados (
+    id_carga INT IDENTITY(1,1) PRIMARY KEY,
+    base VARCHAR(50) NOT NULL,
+    ano INT NOT NULL,
+    mes INT NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    linhas_carregadas INT,
+    arquivo_origem VARCHAR(255),
+    data_inicio DATETIME2 DEFAULT GETDATE(),
+    data_fim DATETIME2,
+    mensagem_erro VARCHAR(MAX),
+
+    CONSTRAINT uq_carga_base_periodo UNIQUE (base, ano, mes)
+);

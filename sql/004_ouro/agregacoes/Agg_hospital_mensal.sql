@@ -1,4 +1,4 @@
-CREATE VIEW ouro.agg_hospital_mensal AS
+CREATE OR ALTER VIEW ouro.agg_hospital_mensal AS
 
 SELECT
     -- Tempo
